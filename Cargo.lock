@@ -59,6 +59,7 @@ dependencies = [
  "chrono",
  "directories",
  "itertools",
+ "percent-encoding",
  "quick-xml",
 ]
 
@@ -161,6 +162,12 @@ checksum = "ac267bcc07f48ee5f8935ab0d24f316fb722d7a1292e2913f0cc196b29ffd611"
 dependencies = [
  "autocfg",
 ]
+
+[[package]]
+name = "percent-encoding"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
 
 [[package]]
 name = "quick-xml"

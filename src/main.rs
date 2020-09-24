@@ -1,6 +1,7 @@
 use chrono::prelude::*;
 use directories::BaseDirs;
 use itertools::Itertools;
+use percent_encoding::percent_decode;
 use quick_xml::events::attributes::{Attribute, Attributes};
 use quick_xml::events::Event;
 use quick_xml::{Reader, Writer};
@@ -95,10 +96,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 Ok(Event::Start(e)) => {
                     if e.name() == b"bookmark" {
                         let attr = href_attribute(e.attributes())?;
-                        let href = str::from_utf8(&attr)?;
+                        let href = percent_decode(&attr).decode_utf8()?;
                         let path = href.strip_prefix("file://").ok_or(HrefNotFileError)?;
-                        // TODO this file may be percent-encoded
-                        if path_needs_cleaning(&paths_to_clean, path) {
+                        if path_needs_cleaning(&paths_to_clean, &path) {
                             skipping = true;
                             continue;
                         }
