@@ -10,7 +10,7 @@ use std::env;
 use std::error::Error;
 use std::fmt;
 use std::fs::{rename, File, OpenOptions};
-use std::io::BufReader;
+use std::io::{BufReader, BufWriter, Write};
 use std::result::Result;
 use std::str;
 use std::vec::Vec;
@@ -77,7 +77,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .write(true)
         .create_new(true)
         .open(&output_filename)?;
-    let mut writer = Writer::new(output_file);
+    let mut writer = Writer::new(BufWriter::new(output_file));
 
     let mut skipping = false;
     let mut skip_whitespace = false;
@@ -131,6 +131,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
     }
+    writer.into_inner().flush()?;
 
     rename(output_filename, input_filename)?;
 
