@@ -54,7 +54,7 @@ fn href_attribute(attributes: Attributes) -> Result<Cow<'_, [u8]>, BookmarkWitho
         .map_err(|_e| BookmarkWithoutSingleHrefError)
 }
 
-fn path_needs_cleaning(paths_to_clean: &Vec<String>, path: &str) -> bool {
+fn path_needs_cleaning(paths_to_clean: &[String], path: &str) -> bool {
     paths_to_clean
         .iter()
         .any(|path_to_clean| path.starts_with(path_to_clean))
