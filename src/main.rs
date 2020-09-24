@@ -1,3 +1,9 @@
+use chrono::prelude::*;
+use directories::BaseDirs;
+use itertools::Itertools;
+use quick_xml::events::attributes::{Attribute, Attributes};
+use quick_xml::events::Event;
+use quick_xml::{Reader, Writer};
 use std::borrow::Cow;
 use std::env;
 use std::error::Error;
@@ -7,12 +13,6 @@ use std::io::BufReader;
 use std::result::Result;
 use std::str;
 use std::vec::Vec;
-use chrono::prelude::*;
-use directories::BaseDirs;
-use itertools::Itertools;
-use quick_xml::{Reader, Writer};
-use quick_xml::events::Event;
-use quick_xml::events::attributes::{Attribute, Attributes};
 
 #[derive(Debug)]
 struct NoBaseDirsError;
@@ -42,16 +42,22 @@ impl fmt::Display for HrefNotFileError {
 impl Error for HrefNotFileError {}
 
 fn href_attribute(attributes: Attributes) -> Result<Cow<'_, [u8]>, BookmarkWithoutSingleHrefError> {
-    attributes.filter_map(|a| {
-        match a {
-            Ok(Attribute { key: b"href", value }) => Some(value),
+    attributes
+        .filter_map(|a| match a {
+            Ok(Attribute {
+                key: b"href",
+                value,
+            }) => Some(value),
             _ => None,
-        }
-    }).exactly_one().map_err(|_e| BookmarkWithoutSingleHrefError)
+        })
+        .exactly_one()
+        .map_err(|_e| BookmarkWithoutSingleHrefError)
 }
 
 fn path_needs_cleaning(paths_to_clean: &Vec<String>, path: &str) -> bool {
-    paths_to_clean.iter().any(|path_to_clean| path.starts_with(path_to_clean))
+    paths_to_clean
+        .iter()
+        .any(|path_to_clean| path.starts_with(path_to_clean))
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -66,7 +72,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut reader = Reader::from_reader(reader);
     let mut buf = Vec::new();
 
-    let output_file = OpenOptions::new().write(true).create_new(true).open(&output_filename)?;
+    let output_file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&output_filename)?;
     let mut writer = Writer::new(output_file);
 
     let mut skipping = false;
@@ -78,7 +87,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 Ok(Event::End(e)) if e.name() == b"bookmark" => {
                     skipping = false;
                     skip_whitespace = true;
-                },
+                }
                 _ => (),
             }
         } else {
@@ -95,25 +104,28 @@ fn main() -> Result<(), Box<dyn Error>> {
                         }
                     }
                     writer.write_event(Event::Start(e))?;
-                },
+                }
                 Ok(Event::End(e)) => {
                     writer.write_event(Event::End(e))?;
-                },
+                }
                 Ok(Event::Empty(e)) => {
                     writer.write_event(Event::Empty(e))?;
                 }
                 Ok(Event::Text(e)) => {
                     if skip_whitespace {
                         skip_whitespace = false;
-                        assert!(e.unescape_and_decode(&reader)?.chars().all(char::is_whitespace));
+                        assert!(e
+                            .unescape_and_decode(&reader)?
+                            .chars()
+                            .all(char::is_whitespace));
                     } else {
                         writer.write_event(Event::Text(e))?;
                     }
-                },
+                }
                 Ok(Event::Eof) => break,
                 Ok(Event::Decl(e)) => {
                     writer.write_event(Event::Decl(e))?;
-                },
+                }
                 Err(e) => panic!("Error at position {}: {:?}", reader.buffer_position(), e),
                 other => unimplemented!("{:?}", other),
             }
