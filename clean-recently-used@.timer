@@ -1,0 +1,9 @@
+[Unit]
+Description=Clean paths below %f from the recently used bookmarks every hour
+
+[Timer]
+OnCalendar=hourly
+AccuracySec=1h
+
+[Install]
+WantedBy=timers.target

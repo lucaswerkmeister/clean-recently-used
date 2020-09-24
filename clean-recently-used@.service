@@ -1,0 +1,8 @@
+[Unit]
+Description=Clean paths below %f from the recently used bookmarks
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/clean-recently-used %f
+SystemCallFilter=@system-service
+SystemCallArchitectures=native
