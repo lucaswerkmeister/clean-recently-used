@@ -149,3 +149,166 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn no_filter() {
+        let input = r#"<?xml version="1.0" encoding="UTF-8"?>
+<xbel version="1.0"
+      xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks"
+      xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info"
+>
+  <bookmark href="file:///home/me/A-File.txt" added="2020-09-24T20:00:00Z" modified="2020-09-25T20:00:00Z" visited="2020-09-25T20:00:00Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="text/plain"/>
+        <bookmark:groups>
+          <bookmark:group>gedit</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2020-09-25T20:00:00Z" count="1234"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+</xbel>
+"#;
+        let mut output = Vec::new();
+        read_filter_write(BufReader::new(input.as_bytes()), &mut output, &vec![]).unwrap();
+        assert_eq!(input, String::from_utf8(output).unwrap());
+    }
+
+    #[test]
+    fn filter_one() {
+        let input = r#"<?xml version="1.0" encoding="UTF-8"?>
+<xbel version="1.0"
+      xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks"
+      xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info"
+>
+  <bookmark href="file:///tmp/A-File.txt" added="2020-09-24T20:00:00Z" modified="2020-09-25T20:00:00Z" visited="2020-09-25T20:00:00Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="text/plain"/>
+        <bookmark:groups>
+          <bookmark:group>gedit</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2020-09-25T20:00:00Z" count="1234"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+  <bookmark href="file:///home/me/A-File.txt" added="2020-09-24T20:00:00Z" modified="2020-09-25T20:00:00Z" visited="2020-09-25T20:00:00Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="text/plain"/>
+        <bookmark:groups>
+          <bookmark:group>gedit</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2020-09-25T20:00:00Z" count="1234"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+</xbel>
+"#;
+        let mut output = Vec::new();
+        read_filter_write(
+            BufReader::new(input.as_bytes()),
+            &mut output,
+            &vec![String::from("/tmp")],
+        )
+        .unwrap();
+        let expected = r#"<?xml version="1.0" encoding="UTF-8"?>
+<xbel version="1.0"
+      xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks"
+      xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info"
+>
+  <bookmark href="file:///home/me/A-File.txt" added="2020-09-24T20:00:00Z" modified="2020-09-25T20:00:00Z" visited="2020-09-25T20:00:00Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="text/plain"/>
+        <bookmark:groups>
+          <bookmark:group>gedit</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2020-09-25T20:00:00Z" count="1234"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+</xbel>
+"#;
+        assert_eq!(expected, String::from_utf8(output).unwrap());
+    }
+
+    #[test]
+    fn filter_encoded() {
+        let input = r#"<?xml version="1.0" encoding="UTF-8"?>
+<xbel version="1.0"
+      xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks"
+      xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info"
+>
+  <bookmark href="file:///opt/A%20Directory/A-File.txt" added="2020-09-24T20:00:00Z" modified="2020-09-25T20:00:00Z" visited="2020-09-25T20:00:00Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="text/plain"/>
+        <bookmark:groups>
+          <bookmark:group>gedit</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2020-09-25T20:00:00Z" count="1234"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+  <bookmark href="file:///home/me/A-File.txt" added="2020-09-24T20:00:00Z" modified="2020-09-25T20:00:00Z" visited="2020-09-25T20:00:00Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="text/plain"/>
+        <bookmark:groups>
+          <bookmark:group>gedit</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2020-09-25T20:00:00Z" count="1234"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+</xbel>
+"#;
+        let mut output = Vec::new();
+        read_filter_write(
+            BufReader::new(input.as_bytes()),
+            &mut output,
+            &vec![String::from("/opt/A Directory")],
+        )
+        .unwrap();
+        let expected = r#"<?xml version="1.0" encoding="UTF-8"?>
+<xbel version="1.0"
+      xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks"
+      xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info"
+>
+  <bookmark href="file:///home/me/A-File.txt" added="2020-09-24T20:00:00Z" modified="2020-09-25T20:00:00Z" visited="2020-09-25T20:00:00Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="text/plain"/>
+        <bookmark:groups>
+          <bookmark:group>gedit</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2020-09-25T20:00:00Z" count="1234"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+</xbel>
+"#;
+        assert_eq!(expected, String::from_utf8(output).unwrap());
+    }
+}
