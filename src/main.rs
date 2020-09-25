@@ -10,7 +10,7 @@ use std::env;
 use std::error::Error;
 use std::fmt;
 use std::fs::{rename, File, OpenOptions};
-use std::io::{BufReader, BufWriter, Write};
+use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::result::Result;
 use std::str;
 use std::vec::Vec;
@@ -61,23 +61,15 @@ fn path_needs_cleaning(paths_to_clean: &[String], path: &str) -> bool {
         .any(|path_to_clean| path.starts_with(path_to_clean))
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let base_dirs = BaseDirs::new().ok_or(NoBaseDirsError)?;
-    let dir = base_dirs.data_dir();
-    let input_filename = dir.join("recently-used.xbel");
-    let output_filename = dir.join(Local::now().format("recently-used.xbel-%+").to_string());
-    let paths_to_clean: Vec<String> = env::args().skip(1).collect();
-
-    let input_file = File::open(&input_filename)?;
-    let reader = BufReader::new(input_file);
+fn read_filter_write<R: BufRead, W: Write>(
+    reader: R,
+    writer: W,
+    paths_to_clean: &[String],
+) -> Result<(), Box<dyn Error>> {
     let mut reader = Reader::from_reader(reader);
     let mut buf = Vec::new();
 
-    let output_file = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(&output_filename)?;
-    let mut writer = Writer::new(BufWriter::new(output_file));
+    let mut writer = Writer::new(writer);
 
     let mut skipping = false;
     let mut skip_whitespace = false;
@@ -132,6 +124,26 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
     writer.into_inner().flush()?;
+    Ok(())
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let base_dirs = BaseDirs::new().ok_or(NoBaseDirsError)?;
+    let dir = base_dirs.data_dir();
+    let input_filename = dir.join("recently-used.xbel");
+    let output_filename = dir.join(Local::now().format("recently-used.xbel-%+").to_string());
+    let paths_to_clean: Vec<String> = env::args().skip(1).collect();
+
+    let input_file = File::open(&input_filename)?;
+    let reader = BufReader::new(input_file);
+
+    let output_file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&output_filename)?;
+    let writer = BufWriter::new(output_file);
+
+    read_filter_write(reader, writer, &paths_to_clean)?;
 
     rename(output_filename, input_filename)?;
 
