@@ -34,10 +34,12 @@ impl fmt::Display for BookmarkWithoutSingleHrefError {
 impl Error for BookmarkWithoutSingleHrefError {}
 
 #[derive(Debug)]
-struct HrefNotFileError;
+struct HrefNotFileError {
+    href: String,
+}
 impl fmt::Display for HrefNotFileError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "HrefNotFileError")
+        write!(f, "HrefNotFileError: {}", self.href)
     }
 }
 impl Error for HrefNotFileError {}
@@ -89,7 +91,11 @@ fn read_filter_write<R: BufRead, W: Write>(
                     if e.name() == b"bookmark" {
                         let attr = href_attribute(e.attributes())?;
                         let href = percent_decode(&attr).decode_utf8()?;
-                        let path = href.strip_prefix("file://").ok_or(HrefNotFileError)?;
+                        let path =
+                            href.strip_prefix("file://")
+                                .ok_or_else(|| HrefNotFileError {
+                                    href: href.to_string(),
+                                })?;
                         if path_needs_cleaning(&paths_to_clean, &path) {
                             skipping = true;
                             continue;
