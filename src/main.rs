@@ -34,15 +34,15 @@ impl fmt::Display for BookmarkWithoutSingleHrefError {
 impl Error for BookmarkWithoutSingleHrefError {}
 
 #[derive(Debug)]
-struct HrefNotFileError {
+struct HrefNotFileOrTrashError {
     href: String,
 }
-impl fmt::Display for HrefNotFileError {
+impl fmt::Display for HrefNotFileOrTrashError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "HrefNotFileError: {}", self.href)
+        write!(f, "HrefNotFileOrTrashError: {}", self.href)
     }
 }
-impl Error for HrefNotFileError {}
+impl Error for HrefNotFileOrTrashError {}
 
 fn href_attribute(attributes: Attributes) -> Result<Cow<'_, [u8]>, BookmarkWithoutSingleHrefError> {
     attributes
@@ -91,15 +91,18 @@ fn read_filter_write<R: BufRead, W: Write>(
                     if e.name() == b"bookmark" {
                         let attr = href_attribute(e.attributes())?;
                         let href = percent_decode(&attr).decode_utf8()?;
-                        let path =
-                            href.strip_prefix("file://")
-                                .ok_or_else(|| HrefNotFileError {
-                                    href: href.to_string(),
-                                })?;
-                        if path_needs_cleaning(&paths_to_clean, &path) {
-                            skipping = true;
-                            continue;
-                        }
+                        if let Some(path) = href.strip_prefix("file://") {
+                            if path_needs_cleaning(&paths_to_clean, &path) {
+                                skipping = true;
+                                continue;
+                            }
+                        } else if let Some(_) = href.strip_prefix("trash://") {
+                            // do nothing
+                        } else {
+                            return Err(Box::new(HrefNotFileOrTrashError {
+                                href: href.to_string(),
+                            }));
+                        };
                     }
                     writer.write_event(Event::Start(e))?;
                 }
