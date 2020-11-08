@@ -34,15 +34,15 @@ impl fmt::Display for BookmarkWithoutSingleHrefError {
 impl Error for BookmarkWithoutSingleHrefError {}
 
 #[derive(Debug)]
-struct HrefNotFileOrTrashError {
+struct HrefNotRecognizedError {
     href: String,
 }
-impl fmt::Display for HrefNotFileOrTrashError {
+impl fmt::Display for HrefNotRecognizedError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "HrefNotFileOrTrashError: {}", self.href)
+        write!(f, "HrefNotRecognizedError: {}", self.href)
     }
 }
-impl Error for HrefNotFileOrTrashError {}
+impl Error for HrefNotRecognizedError {}
 
 fn href_attribute(attributes: Attributes) -> Result<Cow<'_, [u8]>, BookmarkWithoutSingleHrefError> {
     attributes
@@ -98,8 +98,10 @@ fn read_filter_write<R: BufRead, W: Write>(
                             }
                         } else if let Some(_) = href.strip_prefix("trash://") {
                             // do nothing
+                        } else if let Some(_) = href.strip_prefix("mtp://") {
+                            // do nothing
                         } else {
-                            return Err(Box::new(HrefNotFileOrTrashError {
+                            return Err(Box::new(HrefNotRecognizedError {
                                 href: href.to_string(),
                             }));
                         };
