@@ -400,4 +400,44 @@ mod tests {
 "#;
         assert_eq!(expected, String::from_utf8(output).unwrap());
     }
+
+    #[test]
+    fn other_protocols() {
+        let input = r#"<?xml version="1.0" encoding="UTF-8"?>
+<xbel version="1.0"
+      xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks"
+      xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info"
+>
+  <bookmark href="trash:///A-File.txt" added="2020-09-24T20:00:00Z" modified="2020-09-25T20:00:00Z" visited="2020-09-25T20:00:00Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="text/plain"/>
+        <bookmark:groups>
+          <bookmark:group>gedit</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2020-09-25T20:00:00Z" count="1234"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+  <bookmark href="mtp://phone_model/Path/To/File.txt" added="2020-09-24T20:00:00Z" modified="2020-09-25T20:00:00Z" visited="2020-09-25T20:00:00Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="text/plain"/>
+        <bookmark:groups>
+          <bookmark:group>gedit</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2020-09-25T20:00:00Z" count="1234"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+</xbel>
+"#;
+        let mut output = Vec::new();
+        read_filter_write(BufReader::new(input.as_bytes()), &mut output, &vec![]).unwrap();
+        assert_eq!(input, String::from_utf8(output).unwrap());
+    }
 }
