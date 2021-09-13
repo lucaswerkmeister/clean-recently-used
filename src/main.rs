@@ -92,13 +92,13 @@ fn read_filter_write<R: BufRead, W: Write>(
                         let attr = href_attribute(e.attributes())?;
                         let href = percent_decode(&attr).decode_utf8()?;
                         if let Some(path) = href.strip_prefix("file://") {
-                            if path_needs_cleaning(&paths_to_clean, &path) {
+                            if path_needs_cleaning(paths_to_clean, path) {
                                 skipping = true;
                                 continue;
                             }
-                        } else if let Some(_) = href.strip_prefix("trash://") {
+                        } else if href.strip_prefix("trash://").is_some() {
                             // do nothing
-                        } else if let Some(_) = href.strip_prefix("mtp://") {
+                        } else if href.strip_prefix("mtp://").is_some() {
                             // do nothing
                         } else {
                             return Err(Box::new(HrefNotRecognizedError {
@@ -189,7 +189,7 @@ mod tests {
 </xbel>
 "#;
         let mut output = Vec::new();
-        read_filter_write(BufReader::new(input.as_bytes()), &mut output, &vec![]).unwrap();
+        read_filter_write(BufReader::new(input.as_bytes()), &mut output, &[]).unwrap();
         assert_eq!(input, String::from_utf8(output).unwrap());
     }
 
@@ -245,7 +245,7 @@ mod tests {
         read_filter_write(
             BufReader::new(input.as_bytes()),
             &mut output,
-            &vec![String::from("/home/a"), String::from("/home/b")],
+            &[String::from("/home/a"), String::from("/home/b")],
         )
         .unwrap();
         let expected = r#"<?xml version="1.0" encoding="UTF-8"?>
@@ -310,7 +310,7 @@ mod tests {
         read_filter_write(
             BufReader::new(input.as_bytes()),
             &mut output,
-            &vec![String::from("/tmp")],
+            &[String::from("/tmp")],
         )
         .unwrap();
         let expected = r#"<?xml version="1.0" encoding="UTF-8"?>
@@ -375,7 +375,7 @@ mod tests {
         read_filter_write(
             BufReader::new(input.as_bytes()),
             &mut output,
-            &vec![String::from("/opt/A Directory")],
+            &[String::from("/opt/A Directory")],
         )
         .unwrap();
         let expected = r#"<?xml version="1.0" encoding="UTF-8"?>
@@ -437,7 +437,7 @@ mod tests {
 </xbel>
 "#;
         let mut output = Vec::new();
-        read_filter_write(BufReader::new(input.as_bytes()), &mut output, &vec![]).unwrap();
+        read_filter_write(BufReader::new(input.as_bytes()), &mut output, &[]).unwrap();
         assert_eq!(input, String::from_utf8(output).unwrap());
     }
 }
