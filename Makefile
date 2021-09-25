@@ -1,9 +1,14 @@
-.PHONY: all target/release/clean-recently-used install clean
+.PHONY: all target/release/clean-recently-used check install clean
 
 all: target/release/clean-recently-used
 
 target/release/clean-recently-used:
 	cargo build --release
+
+check:
+	cargo check
+	cargo test
+	cargo clippy
 
 install: target/release/clean-recently-used clean-recently-used@.service clean-recently-used@.timer
 	cp $< ~/.local/bin/
