@@ -96,9 +96,13 @@ fn read_filter_write<R: BufRead, W: Write>(
                                 skipping = true;
                                 continue;
                             }
-                        } else if href.strip_prefix("trash://").is_some() {
+                        } else if href.starts_with("trash://") {
                             // do nothing
-                        } else if href.strip_prefix("mtp://").is_some() {
+                        } else if href.starts_with("mtp://") {
+                            // do nothing
+                        } else if href.starts_with("ftp://") {
+                            // do nothing
+                        } else if href.starts_with("sftp://") {
                             // do nothing
                         } else {
                             return Err(Box::new(HrefNotRecognizedError {
@@ -430,6 +434,32 @@ mod tests {
         </bookmark:groups>
         <bookmark:applications>
           <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2020-09-25T20:00:00Z" count="1234"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+  <bookmark href="ftp://user@host/Path/To/File" added="2021-09-14T18:00:00Z" modified="2021-09-14T18:00:00Z" visited="2021-09-14T18:00:00Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="application/x-php"/>
+        <bookmark:groups>
+          <bookmark:group>gedit</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2021-09-14T18:00:00Z" count="1234"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+  <bookmark href="sftp://user@host/Path/To/File" added="2021-09-14T18:00:00Z" modified="2021-09-14T18:00:00Z" visited="2021-09-14T18:00:00Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="application/x-php"/>
+        <bookmark:groups>
+          <bookmark:group>gedit</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2021-09-14T18:00:00Z" count="1234"/>
         </bookmark:applications>
       </metadata>
     </info>
