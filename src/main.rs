@@ -90,7 +90,7 @@ fn read_filter_write<R: BufRead, W: Write>(
                 Ok(Event::Start(e)) => {
                     if e.name() == b"bookmark" {
                         let attr = href_attribute(e.attributes())?;
-                        let href = percent_decode(&attr).decode_utf8()?;
+                        let href = percent_decode(&attr).decode_utf8_lossy();
                         if let Some(path) = href.strip_prefix("file://") {
                             if path_needs_cleaning(paths_to_clean, path) {
                                 skipping = true;
@@ -396,6 +396,71 @@ mod tests {
         </bookmark:groups>
         <bookmark:applications>
           <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2020-09-25T20:00:00Z" count="1234"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+</xbel>
+"#;
+        assert_eq!(expected, String::from_utf8(output).unwrap());
+    }
+
+    #[test]
+    fn tolerate_invalid_utf8() {
+        let input = r#"<?xml version="1.0" encoding="UTF-8"?>
+<xbel version="1.0"
+      xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks"
+      xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info"
+>
+  <bookmark href="file:///opt/A%20Directory/A-File.txt%BC" added="2022-04-08T20:00:00Z" modified="2022-04-08T20:00:00Z" visited="2022-04-08T20:00:00Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="text/plain"/>
+        <bookmark:groups>
+          <bookmark:group>gedit</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2022-04-08T20:00:00Z" count="1234"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+  <bookmark href="file:///opt/Another%20Directory/Another-File.txt%BC" added="2022-04-08T20:00:00Z" modified="22022-04-08T20:00:00Z" visited="2022-04-08T20:00:00Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="text/plain"/>
+        <bookmark:groups>
+          <bookmark:group>gedit</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2022-04-08T20:00:00Z" count="1234"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+</xbel>
+"#;
+        let mut output = Vec::new();
+        read_filter_write(
+            BufReader::new(input.as_bytes()),
+            &mut output,
+            &[String::from("/opt/A Directory")],
+        )
+        .unwrap();
+        let expected = r#"<?xml version="1.0" encoding="UTF-8"?>
+<xbel version="1.0"
+      xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks"
+      xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info"
+>
+  <bookmark href="file:///opt/Another%20Directory/Another-File.txt%BC" added="2022-04-08T20:00:00Z" modified="22022-04-08T20:00:00Z" visited="2022-04-08T20:00:00Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="text/plain"/>
+        <bookmark:groups>
+          <bookmark:group>gedit</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2022-04-08T20:00:00Z" count="1234"/>
         </bookmark:applications>
       </metadata>
     </info>
