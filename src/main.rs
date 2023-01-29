@@ -4,6 +4,7 @@ use itertools::Itertools;
 use percent_encoding::percent_decode;
 use quick_xml::events::attributes::{Attribute, Attributes};
 use quick_xml::events::Event;
+use quick_xml::name::QName;
 use quick_xml::{Reader, Writer};
 use std::borrow::Cow;
 use std::env;
@@ -48,7 +49,7 @@ fn href_attribute(attributes: Attributes) -> Result<Cow<'_, [u8]>, BookmarkWitho
     attributes
         .filter_map(|a| match a {
             Ok(Attribute {
-                key: b"href",
+                key: QName(b"href"),
                 value,
             }) => Some(value),
             _ => None,
@@ -78,17 +79,17 @@ fn read_filter_write<R: BufRead, W: Write>(
 
     loop {
         if skipping {
-            match reader.read_event(&mut buf) {
-                Ok(Event::End(e)) if e.name() == b"bookmark" => {
+            match reader.read_event_into(&mut buf) {
+                Ok(Event::End(e)) if e.name() == QName(b"bookmark") => {
                     skipping = false;
                     skip_whitespace = true;
                 }
                 _ => (),
             }
         } else {
-            match reader.read_event(&mut buf) {
+            match reader.read_event_into(&mut buf) {
                 Ok(Event::Start(e)) => {
-                    if e.name() == b"bookmark" {
+                    if e.name() == QName(b"bookmark") {
                         let attr = href_attribute(e.attributes())?;
                         let href = percent_decode(&attr).decode_utf8_lossy();
                         #[allow(clippy::if_same_then_else)]
@@ -123,7 +124,7 @@ fn read_filter_write<R: BufRead, W: Write>(
                     if skip_whitespace {
                         skip_whitespace = false;
                         assert!(e
-                            .unescape_and_decode(&reader)?
+                            .unescape()?
                             .chars()
                             .all(char::is_whitespace));
                     } else {
