@@ -91,6 +91,7 @@ fn read_filter_write<R: BufRead, W: Write>(
                     if e.name() == b"bookmark" {
                         let attr = href_attribute(e.attributes())?;
                         let href = percent_decode(&attr).decode_utf8_lossy();
+                        #[allow(clippy::if_same_then_else)]
                         if let Some(path) = href.strip_prefix("file://") {
                             if path_needs_cleaning(paths_to_clean, path) {
                                 skipping = true;
