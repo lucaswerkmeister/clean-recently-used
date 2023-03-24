@@ -28,6 +28,7 @@ systemctl --user enable --now "clean-recently-used@$(systemd-escape -p /tmp).tim
 ```
 
 This will clean `/tmp` from the recently-used file every hour.
+(If you want to clean more than one directory at once, you will need to write a custom service unit.)
 
 ## License
 
