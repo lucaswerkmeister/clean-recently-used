@@ -11,7 +11,7 @@ license = "BlueOak-1.0.0"
 [dependencies]
 quick-xml = "0.36.1"
 itertools = "0.13.0"
-chrono = "0.4.31"
+chrono = "0.4.39"
 directories = "5.0.1"
 percent-encoding = "2.3.1"
 
