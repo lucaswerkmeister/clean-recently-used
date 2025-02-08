@@ -9,10 +9,10 @@ license = "BlueOak-1.0.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-quick-xml = "0.36.1"
-itertools = "0.13.0"
+quick-xml = "0.37.2"
+itertools = "0.14.0"
 chrono = "0.4.39"
-directories = "5.0.1"
+directories = "6.0.0"
 percent-encoding = "2.3.1"
 
 [dev-dependencies]
