@@ -2,7 +2,7 @@
 name = "clean-recently-used"
 version = "0.1.0"
 authors = ["Lucas Werkmeister <mail@lucaswerkmeister.de>"]
-edition = "2021"
+edition = "2024"
 repository = "https://github.com/lucaswerkmeister/clean-recently-used/"
 license = "BlueOak-1.0.0"
 
