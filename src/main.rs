@@ -19,7 +19,7 @@ use std::vec::Vec;
 #[derive(Debug)]
 struct NoBaseDirsError;
 impl fmt::Display for NoBaseDirsError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "NoBaseDirsError")
     }
 }
@@ -28,7 +28,7 @@ impl Error for NoBaseDirsError {}
 #[derive(Debug)]
 struct BookmarkWithoutSingleHrefError;
 impl fmt::Display for BookmarkWithoutSingleHrefError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "BookmarkWithoutSingleHrefError")
     }
 }
@@ -39,13 +39,13 @@ struct HrefNotRecognizedError {
     href: String,
 }
 impl fmt::Display for HrefNotRecognizedError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "HrefNotRecognizedError: {}", self.href)
     }
 }
 impl Error for HrefNotRecognizedError {}
 
-fn href_attribute(attributes: Attributes) -> Result<Cow<'_, [u8]>, BookmarkWithoutSingleHrefError> {
+fn href_attribute(attributes: Attributes) -> Result<Cow<[u8]>, BookmarkWithoutSingleHrefError> {
     attributes
         .filter_map(|a| match a {
             Ok(Attribute {
