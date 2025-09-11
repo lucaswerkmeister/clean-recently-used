@@ -124,7 +124,7 @@ fn read_filter_write<R: BufRead, W: Write>(
                     if skip_whitespace {
                         skip_whitespace = false;
                         assert!(e
-                            .unescape()?
+                            .decode()?
                             .chars()
                             .all(char::is_whitespace));
                     } else {
