@@ -106,6 +106,8 @@ fn read_filter_write<R: BufRead, W: Write>(
                             // do nothing
                         } else if href.starts_with("sftp://") {
                             // do nothing
+                        } else if href.starts_with("cdda://") {
+                            // do nothing
                         } else {
                             return Err(Box::new(HrefNotRecognizedError {
                                 href: href.to_string(),
@@ -527,6 +529,16 @@ mod tests {
         </bookmark:groups>
         <bookmark:applications>
           <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2021-09-14T18:00:00Z" count="1234"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+  <bookmark href="cdda://sr0/" added="2025-09-13T11:59:30.774505Z" modified="2025-09-13T11:59:30.774508Z" visited="2025-09-13T11:59:30.774506Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="inode/directory"/>
+        <bookmark:applications>
+          <bookmark:application name="org.gnome.Nautilus" exec="&apos;brasero %U&apos;" modified="2025-09-13T11:59:30.774507Z" count="1"/>
         </bookmark:applications>
       </metadata>
     </info>
